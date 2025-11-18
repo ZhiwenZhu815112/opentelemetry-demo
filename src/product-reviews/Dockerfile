@@ -17,10 +17,11 @@ RUN apk update && \
 COPY ./src/product-reviews/requirements.txt requirements.txt
 
 # Create a virtual environment in /venv and install dependencies
-RUN python -m venv venv && \
-    venv/bin/pip install --no-cache-dir -r requirements.txt
+RUN python -m venv /venv && \
+    /venv/bin/pip install --no-cache-dir -r requirements.txt
 
-RUN venv/bin/opentelemetry-bootstrap -a install
+RUN /venv/bin/opentelemetry-bootstrap -a install
+
 
 ##
 ## Stage 2: Minimal runtime image (non-root)

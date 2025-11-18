@@ -76,9 +76,6 @@ COPY --from=builder /usr/local /usr/local
 # Ensure our non-root user can access installed files
 RUN chown -R app:app /usr/local
 
-USER app
-WORKDIR /currency
-
 # The service still reads the port from CURRENCY_PORT env and passes it as CLI arg
 EXPOSE ${CURRENCY_PORT}
 

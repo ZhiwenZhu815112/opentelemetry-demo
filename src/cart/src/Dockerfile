@@ -48,9 +48,6 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine3.22
 
 WORKDIR /usr/src/app/
 
-# Create a non-root user and group (Alpine style)
-RUN addgroup -S app && adduser -S -G app app
-
 # Copy published binaries from builder stage
 COPY --from=builder /cart/ ./
 
