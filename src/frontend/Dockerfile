@@ -86,24 +86,13 @@ RUN npm run build
 
 FROM docker.io/library/node:22-slim AS deps
 
-
-
 WORKDIR /app
-
-
 
 COPY ./src/frontend/package.json package.json
 
 COPY ./src/frontend/package-lock.json package-lock.json
 
 RUN npm ci --omit=dev
-
-
-
-
-
-
-
 
 
 # ----------------------------
@@ -114,10 +103,7 @@ RUN npm ci --omit=dev
 
 FROM gcr.io/distroless/nodejs22-debian12:nonroot
 
-
-
 WORKDIR /app
-
 
 
 # Copy built app
@@ -127,11 +113,9 @@ COPY --from=builder /app/.next/standalone/ ./
 COPY --from=builder /app/.next/static/ .next/static/
 
 
-
 # Copy production node_modules
 
 COPY --from=deps /app/node_modules/ node_modules/
-
 
 
 # Public assets and telemetry instrumentation
@@ -140,10 +124,6 @@ COPY ./src/frontend/public/ public/
 
 COPY ./src/frontend/utils/telemetry/Instrumentation.js Instrumentation.js
 
-
-
-EXPOSE ${PORT:FRONTEND_PORT}
-
-
+EXPOSE ${FRONTEND_PORT}
 
 CMD ["--require=./Instrumentation.js", "server.js"]
