@@ -4,8 +4,8 @@ set -euo pipefail
 ########################################
 # Expect AWS_ACCOUNT_ID and AWS_REGION
 # to be provided via environment variables.
+# (Do NOT hardcode these in the script.)
 ########################################
-
 : "${AWS_ACCOUNT_ID:?AWS_ACCOUNT_ID env var is required}"
 : "${AWS_REGION:?AWS_REGION env var is required}"
 
@@ -13,17 +13,15 @@ ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
 ########################################
 # Image version (semantic version style)
-# Example: "1.0.0-enpm818r" or "enpm818r-v1"
+# You can change this tag freely.
 ########################################
-
 IMAGE_VERSION="enpm818r-1.0.0"
 
 ########################################
-# List of services to push to ECR
-# Each will map to an ECR repo:
+# Services to push to ECR
+# Each maps to an ECR repo:
 #   opentelemetry-demo-<service>
 ########################################
-
 SERVICES=(
   accounting
   ad
@@ -31,31 +29,36 @@ SERVICES=(
   checkout
   currency
   email
+  flagd
   flagd-ui
   frontend
   frontend-proxy
-  fraud-detection
-  image-provider
+  grafana
+  jaeger
   kafka
   llm
   load-generator
+  opensearch
+  otel-collector
   payment
+  postgresql
   product-catalog
   product-reviews
-  quote
+  prometheus
   recommendation
   shipping
-  postgresql
-  opensearch
+  valkey-cart
+  quote
 )
 
 ########################################
 # Helper: get local image name for a service
+# (Must match what you have locally: `docker images`)
 ########################################
-
 get_local_image() {
   local svc="$1"
   case "$svc" in
+    # Core demo images (built or pulled by compose)
     accounting)        echo "ghcr.io/open-telemetry/demo:latest-accounting" ;;
     ad)                echo "ghcr.io/open-telemetry/demo:latest-ad" ;;
     cart)              echo "ghcr.io/open-telemetry/demo:latest-cart" ;;
@@ -78,6 +81,15 @@ get_local_image() {
     shipping)          echo "ghcr.io/open-telemetry/demo:latest-shipping" ;;
     postgresql)        echo "ghcr.io/open-telemetry/demo:latest-postgresql" ;;
     opensearch)        echo "opentelemetry-demo-opensearch:latest" ;;
+
+    # Third-party images referenced by compose
+    flagd)             echo "ghcr.io/open-feature/flagd:v0.12.9" ;;
+    valkey-cart)       echo "valkey/valkey:9.0.0-alpine3.22" ;;
+    jaeger)            echo "jaegertracing/jaeger:2.11.0" ;;
+    grafana)           echo "grafana/grafana:12.2.0" ;;
+    otel-collector)    echo "ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.139.0" ;;
+    prometheus)        echo "quay.io/prometheus/prometheus:v3.7.3" ;;
+
     *)
       echo "Unknown service: $svc" >&2
       return 1
@@ -87,8 +99,8 @@ get_local_image() {
 
 ########################################
 # 1. Create ECR repositories (if needed)
+#    scanOnPush enabled for vulnerability scans
 ########################################
-
 echo "==> Creating ECR repositories with scanOnPush enabled"
 
 for SVC in "${SERVICES[@]}"; do
@@ -107,7 +119,6 @@ done
 ########################################
 # 2. Login to ECR
 ########################################
-
 echo "==> Logging in to ECR: ${ECR_REGISTRY}"
 
 aws ecr get-login-password --region "${AWS_REGION}" \
@@ -116,7 +127,6 @@ aws ecr get-login-password --region "${AWS_REGION}" \
 ########################################
 # 3. Tag and push images
 ########################################
-
 echo "==> Tagging and pushing images with version: ${IMAGE_VERSION}"
 
 for SVC in "${SERVICES[@]}"; do
@@ -133,6 +143,7 @@ for SVC in "${SERVICES[@]}"; do
   # Check if local image exists
   if ! docker image inspect "${LOCAL_IMAGE}" >/dev/null 2>&1; then
     echo "!! Local image not found: ${LOCAL_IMAGE}. Skipping this service."
+    echo "   Tip: run 'docker pull ${LOCAL_IMAGE}' if it's a third-party image."
     continue
   fi
 
