@@ -1,0 +1,195 @@
+# ---------------------------------------------------------
+# add liveness and readiness probes to core services
+# frontend, cart, checkout, currency, product-catalog, recommendation,
+# shipping, ad, email, payment using httpGet on path / and port 8080
+# ---------------------------------------------------------
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: cart
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: checkout
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: currency
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-catalog
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: product-catalog
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: recommendation
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipping
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: shipping
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ad
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: ad
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: email
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+  namespace: otel-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: payment
+        livenessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet: {path: /, port: 8080}
+          initialDelaySeconds: 5
+          periodSeconds: 10
