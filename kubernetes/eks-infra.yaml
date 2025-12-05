@@ -207,4 +207,4 @@ Resources:
         DesiredSize: 3
         MinSize: 2
         MaxSize: 5
-      InstanceTypes: ["t3.large"]
+      InstanceTypes: ["t3.medium"]
