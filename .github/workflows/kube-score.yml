@@ -19,6 +19,6 @@ jobs:
           MANIFEST_PATH="kubernetes/opentelemetry-demo.yml"
           
           docker run \
-            -v ${{ github.workspace }}:/manifests \
+            -v ${{ github.workspace }}:/project \
             ${DOCKER_IMAGE} \
-            score /manifests/${MANIFEST_PATH} 
+            score ${MANIFEST_PATH} 
