@@ -1,40 +1,18 @@
 name: Kube-score Analysis
-
 # 🚨 IMPORTANT: Change 'path/to/your/manifest.yaml' below to your actual file path!
-
 on:
   # Triggers on push and pull requests to the main branch
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-  
+    branches: [main]
   # This enables manual triggering via the GitHub Actions UI
   workflow_dispatch:
-
 jobs:
   kube_score:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
       - name: Run Kube-score v1.20.0 with Docker
-        run: |
-          # The Docker image is pinned to a specific version for stability.
-          DOCKER_IMAGE="kubescore/kubescore:v1.20.0"
-          
-          # 🚨 CUSTOMIZE THIS PATH 🚨
-          # This must be the path to your manifest file relative to the repository root.
-          MANIFEST_PATH="kubernetes/opentelemetry-demo.yml" 
-          
-          echo "Scanning manifest: ${MANIFEST_PATH}"
-          
-          # The -v mounts your entire repo into the container at /manifests
-          docker run \
-            -v ${{ github.workspace }}:/manifests \
-            ${DOCKER_IMAGE} \
-            score /manifests/${MANIFEST_PATH} \
-            --output-format human \
-            --ignore-container-security-context
+        run: "# The Docker image is pinned to a specific version for stability.\nDOCKER_IMAGE=\"kubescore/kubescore:v1.20.0\"\n\n# 🚨 CUSTOMIZE THIS PATH 🚨\n# This must be the path to your manifest file relative to the repository root.\nMANIFEST_PATH=\"kubernetes/opentelemetry-demo.yml\" \n\necho \"Scanning manifest: ${MANIFEST_PATH}\"\n\n# The -v mounts your entire repo into the container at /manifests\ndocker run \\\n  -v ${{ github.workspace }}:/manifests \\\n  ${DOCKER_IMAGE} \\\n  score /manifests/${MANIFEST_PATH} \\\n  --output-format human \\\n  --ignore-container-security-context\n"
