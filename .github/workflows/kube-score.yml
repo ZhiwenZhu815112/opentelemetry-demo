@@ -10,17 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Run Kube-score v1.20.0 with Docker
+      - name: kube-score check
+        uses: piraces/kube-score-ga@v0.1.3
         with:
-          context: .
-        run: |
-          DOCKER_IMAGE="zegl/kube-score:v1.20.0"
-          MANIFEST_PATH="kubernetes/opentelemetry-demo.yml"
-          
-          docker run \
-            -v ${{ github.workspace }}:/project \
-            ${DOCKER_IMAGE} \
-            score ${MANIFEST_PATH} 
+          manifests-folders: './kubernetes/opentelemetry-demo.yml'
