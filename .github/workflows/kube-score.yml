@@ -12,12 +12,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: kube-score check
-        uses: piraces/kube-score-ga@v0.1.3
-        with:
-          manifests-folders: './kubernetes/opentelemetry-demo.yml'
-          ignore-exit-code: 'true'
-          output-file: 'score-results.txt'
+       - name: Install kube-score
+          run: |
+            wget https://github.com/zegl/kube-score/releases/download/v1.16.1/kube-score_1.16.1_linux_amd64.tar.gz
+            tar xvf ./kube-score_1.16.1_linux_amd64.tar.gz && mv kube-score /usr/local/bin
+      - name: Run kube-score
+          run: kube-score score kubernetes/opentelemetry-demo.yaml > score-results.txt
       - name: upload results
         uses: actions/upload-artifact@v4
         with:
