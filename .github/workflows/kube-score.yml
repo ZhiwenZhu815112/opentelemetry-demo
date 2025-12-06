@@ -1,6 +1,8 @@
 name: Kube-score Analysis
 
 on:
+  push:
+    branches: [create-github-actions]
   workflow_dispatch:
 
 jobs:
