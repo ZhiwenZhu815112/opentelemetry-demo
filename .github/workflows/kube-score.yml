@@ -19,7 +19,7 @@ jobs:
           ignore-exit-code: 'true'
           output-file: 'score-results.txt'
       - name: upload results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: artifact-1
+          name: upload results
           path: score-results.txt
