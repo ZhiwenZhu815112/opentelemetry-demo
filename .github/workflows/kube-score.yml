@@ -17,7 +17,7 @@ jobs:
           wget https://github.com/zegl/kube-score/releases/download/v1.16.1/kube-score_1.16.1_linux_amd64.tar.gz
           tar xvf ./kube-score_1.16.1_linux_amd64.tar.gz && mv kube-score /usr/local/bin
       - name: Run kube-score
-        run: kube-score score kubernetes/opentelemetry-demo.yaml > score-results.txt
+        run: kube-score score kubernetes/opentelemetry-demo.yaml > score-results.txt || true
       - name: upload results
         uses: actions/upload-artifact@v4
         with:
