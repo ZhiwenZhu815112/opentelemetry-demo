@@ -3,9 +3,7 @@ name: Kube-score Analysis
 on:
   # Triggers on push and pull requests to the main branch
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [create-github-actions]
   # This enables manual triggering via the GitHub Actions UI
   workflow_dispatch:
 jobs:
