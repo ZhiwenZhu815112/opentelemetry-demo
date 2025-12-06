@@ -18,3 +18,8 @@ jobs:
           manifests-folders: './kubernetes/opentelemetry-demo.yml'
           ignore-exit-code: 'true'
           output-file: 'score-results.txt'
+      - name: upload results
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifact-1
+          path: score-results.txt
