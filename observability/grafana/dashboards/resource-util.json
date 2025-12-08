@@ -1,0 +1,376 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "OpenTelemetry Demo - Resource Utilization Dashboard",
+    "tags": ["opentelemetry", "resources", "kubernetes"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage by Pod",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\", container!=\"POD\", container!=\"\"}[5m])) by (pod, namespace)",
+            "legendFormat": "{{pod}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "CPU Usage (cores)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage by Pod",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\", container!=\"POD\", container!=\"\"}) by (pod, namespace) / 1024 / 1024",
+            "legendFormat": "{{pod}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "mbytes",
+            "label": "Memory Usage (MB)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      },
+      {
+        "id": 3,
+        "title": "CPU Usage vs Limits",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\", container!=\"POD\", container!=\"\"}[5m])) by (pod) / sum(kube_pod_container_resource_limits{resource=\"cpu\", namespace=\"otel-demo\"}) by (pod) * 100",
+            "legendFormat": "{{pod}} - Usage %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "CPU Usage (%)",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "thresholds": [
+          {
+            "value": 90,
+            "colorMode": "critical",
+            "op": "gt"
+          },
+          {
+            "value": 70,
+            "colorMode": "warning",
+            "op": "gt"
+          }
+        ],
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      },
+      {
+        "id": 4,
+        "title": "Memory Usage vs Limits",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\", container!=\"POD\", container!=\"\"}) by (pod) / sum(kube_pod_container_resource_limits{resource=\"memory\", namespace=\"otel-demo\"}) by (pod) * 100",
+            "legendFormat": "{{pod}} - Usage %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "Memory Usage (%)",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "thresholds": [
+          {
+            "value": 90,
+            "colorMode": "critical",
+            "op": "gt"
+          },
+          {
+            "value": 70,
+            "colorMode": "warning",
+            "op": "gt"
+          }
+        ],
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      },
+      {
+        "id": 5,
+        "title": "Pod Count by Service",
+        "type": "stat",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "count(kube_pod_info{namespace=\"otel-demo\"}) by (app_kubernetes_io_name)",
+            "legendFormat": "{{app_kubernetes_io_name}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": null,
+                  "color": "green"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Network I/O by Pod",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"otel-demo\"}[5m])) by (pod) / 1024 / 1024",
+            "legendFormat": "{{pod}} - RX",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"otel-demo\"}[5m])) by (pod) / 1024 / 1024",
+            "legendFormat": "{{pod}} - TX",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "mbytes",
+            "label": "Network I/O (MB/s)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "bars": false,
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      },
+      {
+        "id": 7,
+        "title": "Disk I/O by Pod",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 24
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_fs_reads_bytes_total{namespace=\"otel-demo\"}[5m])) by (pod) / 1024 / 1024",
+            "legendFormat": "{{pod}} - Read",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(container_fs_writes_bytes_total{namespace=\"otel-demo\"}[5m])) by (pod) / 1024 / 1024",
+            "legendFormat": "{{pod}} - Write",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "mbytes",
+            "label": "Disk I/O (MB/s)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "bars": false,
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Resource Alerts",
+          "datasource": "Prometheus",
+          "enable": true,
+          "iconColor": "rgba(255, 96, 96, 1)",
+          "tags": ["resource", "alert"],
+          "type": "tags"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "namespace",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(kube_pod_info, namespace)",
+          "current": {
+            "text": "otel-demo",
+            "value": "otel-demo"
+          },
+          "includeAll": false,
+          "multi": false,
+          "refresh": 1
+        },
+        {
+          "name": "pod",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace\"}, pod)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": true,
+          "refresh": 1
+        }
+      ]
+    },
+    "links": []
+  }
+}
+

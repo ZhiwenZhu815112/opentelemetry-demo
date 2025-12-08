@@ -1,0 +1,270 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "OpenTelemetry Demo - Latency Dashboard",
+    "tags": ["opentelemetry", "latency", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "P95 Latency by Service",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(otel_demo_request_duration_seconds_bucket[5m])) by (le, service_name))",
+            "legendFormat": "{{service_name}} - P95",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(otel_demo_request_duration_seconds_bucket[5m])) by (le, service_name))",
+            "legendFormat": "{{service_name}} - P99",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Latency (seconds)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "fillGradient": 0,
+        "dashLength": 10,
+        "spaceLength": 10,
+        "pointradius": 2,
+        "points": false,
+        "legend": {
+          "show": true,
+          "values": true,
+          "min": false,
+          "max": false,
+          "current": false,
+          "total": false,
+          "avg": false
+        }
+      },
+      {
+        "id": 2,
+        "title": "Average Latency by Service",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(otel_demo_request_duration_seconds_sum[5m])) by (service_name) / sum(rate(otel_demo_request_duration_seconds_count[5m])) by (service_name)",
+            "legendFormat": "{{service_name}} - Avg",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Average Latency (seconds)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1
+      },
+      {
+        "id": 3,
+        "title": "Latency Distribution (Heatmap)",
+        "type": "heatmap",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(otel_demo_request_duration_seconds_bucket[1m])) by (le, service_name)",
+            "format": "heatmap",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Latency (seconds)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "color": {
+          "mode": "spectrum"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Request Rate by Service",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(otel_demo_http_requests_total[5m])) by (service_name)",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Requests per second",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "bars": false,
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1
+      },
+      {
+        "id": 5,
+        "title": "Latency Percentiles (Current)",
+        "type": "stat",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(otel_demo_request_duration_seconds_bucket[5m])) by (le, service_name))",
+            "legendFormat": "{{service_name}} - P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(otel_demo_request_duration_seconds_bucket[5m])) by (le, service_name))",
+            "legendFormat": "{{service_name}} - P95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(otel_demo_request_duration_seconds_bucket[5m])) by (le, service_name))",
+            "legendFormat": "{{service_name}} - P99",
+            "refId": "C"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": null,
+                  "color": "green"
+                },
+                {
+                  "value": 0.5,
+                  "color": "yellow"
+                },
+                {
+                  "value": 1.0,
+                  "color": "red"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "enable": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "tags": ["deployment"],
+          "type": "tags"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(otel_demo_request_duration_seconds_bucket, service_name)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": true,
+          "refresh": 1
+        }
+      ]
+    },
+    "links": []
+  }
+}
+

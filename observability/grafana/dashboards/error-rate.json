@@ -1,0 +1,283 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "OpenTelemetry Demo - Error Rate Dashboard",
+    "tags": ["opentelemetry", "errors", "reliability"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Error Rate by Service (%)",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "(sum(rate(otel_demo_http_requests_total{status_code=~\"5..\"}[5m])) by (service_name) / sum(rate(otel_demo_http_requests_total[5m])) by (service_name)) * 100",
+            "legendFormat": "{{service_name}} - Error Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "Error Rate (%)",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "thresholds": [
+          {
+            "value": 5,
+            "colorMode": "critical",
+            "op": "gt"
+          },
+          {
+            "value": 1,
+            "colorMode": "warning",
+            "op": "gt"
+          }
+        ],
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      },
+      {
+        "id": 2,
+        "title": "HTTP Status Codes by Service",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(otel_demo_http_requests_total{status_code=~\"2..\"}[5m])) by (service_name)",
+            "legendFormat": "{{service_name}} - 2xx",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(otel_demo_http_requests_total{status_code=~\"4..\"}[5m])) by (service_name)",
+            "legendFormat": "{{service_name}} - 4xx",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(otel_demo_http_requests_total{status_code=~\"5..\"}[5m])) by (service_name)",
+            "legendFormat": "{{service_name}} - 5xx",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Requests per second",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "bars": false,
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "stack": true,
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      },
+      {
+        "id": 3,
+        "title": "Total Errors (Last 5 minutes)",
+        "type": "stat",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(increase(otel_demo_http_requests_total{status_code=~\"5..\"}[5m])) by (service_name)",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": null,
+                  "color": "green"
+                },
+                {
+                  "value": 10,
+                  "color": "yellow"
+                },
+                {
+                  "value": 50,
+                  "color": "red"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate by Status Code",
+        "type": "piechart",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(otel_demo_http_requests_total{status_code=~\"[45]..\"}[5m])) by (status_code)",
+            "legendFormat": "{{status_code}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "pieType": "pie",
+          "tooltip": {
+            "mode": "single"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Error Rate Trend",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(otel_demo_http_requests_total{status_code=~\"5..\"}[5m])) by (service_name, status_code)",
+            "legendFormat": "{{service_name}} - {{status_code}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Error Rate (req/s)",
+            "min": 0
+          },
+          {
+            "format": "short"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "fill": 1,
+        "legend": {
+          "show": true,
+          "values": true
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Alerts",
+          "datasource": "Prometheus",
+          "enable": true,
+          "iconColor": "rgba(255, 96, 96, 1)",
+          "tags": ["alert"],
+          "type": "tags"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(otel_demo_http_requests_total, service_name)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": true,
+          "refresh": 1
+        },
+        {
+          "name": "status_code",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(otel_demo_http_requests_total, status_code)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": true,
+          "refresh": 1
+        }
+      ]
+    },
+    "links": []
+  }
+}
+

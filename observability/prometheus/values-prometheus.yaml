@@ -1,0 +1,278 @@
+# Prometheus Helm Values for OpenTelemetry Demo
+# This configuration enables Prometheus with kube-state-metrics, node-exporter,
+# and Alertmanager for monitoring the OpenTelemetry Astronomy Shop demo.
+
+# Global configuration
+global:
+  rbac:
+    create: true
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Prometheus Operator configuration
+prometheusOperator:
+  enabled: true
+  createCustomResource: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Prometheus server configuration
+prometheus:
+  enabled: true
+  prometheusSpec:
+    # Resource limits
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+    
+    # Retention period
+    retention: 30d
+    
+    # Storage configuration
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 50Gi
+    
+    # Service monitor selector
+    serviceMonitorSelector:
+      matchLabels:
+        release: observability-prometheus
+    
+    # Pod monitor selector
+    podMonitorSelector:
+      matchLabels:
+        release: observability-prometheus
+    
+    # Additional scrape configs for OpenTelemetry Collector
+    additionalScrapeConfigs:
+      - job_name: 'otel-collector'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - otel-demo
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+            action: keep
+            regex: otelcol
+          - source_labels: [__meta_kubernetes_pod_ip]
+            action: replace
+            target_label: __address__
+            replacement: $1:8888
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: pod
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: namespace
+    
+    # External labels
+    externalLabels:
+      cluster: otel-demo-cluster
+      environment: production
+    
+    # Alerting configuration
+    alerting:
+      alertmanagers:
+        - namespace: observability
+          name: observability-prometheus-alertmanager
+          port: 9093
+          pathPrefix: /
+    
+    # Additional scrape configs for OpenTelemetry Demo services
+    additionalScrapeConfigs:
+      - job_name: 'otel-demo-services'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - otel-demo
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name
+
+# Alertmanager configuration
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    
+    # Storage for Alertmanager
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 10Gi
+    
+    # Alertmanager configuration
+    config:
+      global:
+        resolve_timeout: 5m
+        # SNS integration (replace with your actual SNS topic ARN)
+        # smtp_smarthost: 'smtp.gmail.com:587'
+        # smtp_from: 'alerts@example.com'
+      
+      # Route configuration
+      route:
+        group_by: ['alertname', 'cluster', 'service']
+        group_wait: 10s
+        group_interval: 10s
+        repeat_interval: 12h
+        receiver: 'default'
+        routes:
+          - match:
+              severity: critical
+            receiver: 'critical-alerts'
+            continue: true
+          - match:
+              severity: warning
+            receiver: 'warning-alerts'
+      
+      # Receivers
+      receivers:
+        - name: 'default'
+          # webhook_configs:
+          #   - url: 'http://webhook-receiver:5001/webhook'
+        
+        - name: 'critical-alerts'
+          # SNS configuration (uncomment and configure)
+          # sns_configs:
+          #   - topic_arn: 'arn:aws:sns:us-east-1:123456789012:otel-demo-critical-alerts'
+          #     region: us-east-1
+          #     subject: 'Critical Alert: {{ .GroupLabels.alertname }}'
+          #     message: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+          # webhook_configs:
+          #   - url: 'http://webhook-receiver:5001/webhook'
+        
+        - name: 'warning-alerts'
+          # webhook_configs:
+          #   - url: 'http://webhook-receiver:5001/webhook'
+      
+      # Inhibition rules
+      inhibit_rules:
+        - source_match:
+            severity: 'critical'
+          target_match:
+            severity: 'warning'
+          equal: ['alertname', 'cluster', 'service']
+
+# kube-state-metrics configuration
+kubeStateMetrics:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# node-exporter configuration
+nodeExporter:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Grafana (optional, we'll install separately)
+grafana:
+  enabled: false
+
+# Prometheus Adapter for Kubernetes Metrics API (optional)
+kubeApiServer:
+  enabled: true
+
+kubelet:
+  enabled: true
+
+kubeControllerManager:
+  enabled: true
+
+kubeScheduler:
+  enabled: true
+
+# Additional ServiceMonitors for OpenTelemetry Demo services
+# These will be created via the alert rules file
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false
+    configReloaders: true
+    general: true
+    k8s: true
+    kubeApiserverAvailability: true
+    kubeApiserverBurnrate: true
+    kubeApiserverHistogram: true
+    kubeApiserverSlos: true
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
+    time: true
+
+# Service account annotations for IRSA (if using AWS IAM roles)
+serviceAccounts:
+  prometheus:
+    annotations: {}
+      # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/prometheus-role
+  alertmanager:
+    annotations: {}
+      # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/alertmanager-role
+
