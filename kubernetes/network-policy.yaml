@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-external-traffic
+  namespace: otel-demo
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  # rules 1: allow all internal traffic within the namespace
+  - from:
+    - podSelector: {}
+  # rules 2: Allow traffic from Public Subnets only, where the ALB resides
+  # This allows ALB traffic while blocking any other pods from another namespace
+  - from:
+    - ipBlock:
+        cidr: 10.0.0.0/20   # Public Subnet A
+    - ipBlock:
+        cidr: 10.0.16.0/20  # Public Subnet B
+  
+  # rules 3: Allow traffic from kube-system and calico-system namespaces for cluster operations
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: calico-system

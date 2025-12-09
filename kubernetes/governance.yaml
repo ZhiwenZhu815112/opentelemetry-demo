@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    environment: dev
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+  labels:
+    environment: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+  labels:
+    environment: prod
+---
+# --- 2. Least Privilege Role---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dev
+  name: dev-viewer-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps"]
+  verbs: ["get", "list", "watch"] # read-only permissions
+---
+# --- 3. RoleBinding ---
+# make sure to replace 'developers' with the actual user or group in your cluster
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dev-viewer-binding
+  namespace: dev
+subjects:
+- kind: Group
+  name: developers # suppose 'developers' is the group needing access
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: dev-viewer-role
+  apiGroup: rbac.authorization.k8s.io
