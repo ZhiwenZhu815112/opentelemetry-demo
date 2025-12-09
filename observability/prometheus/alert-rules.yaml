@@ -1,0 +1,208 @@
+# Prometheus Alert Rules for OpenTelemetry Demo
+# This file defines custom alert rules for the OpenTelemetry Astronomy Shop demo.
+# These rules will be loaded by Prometheus Operator as PrometheusRule CRDs.
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: otel-demo-alerts
+  namespace: observability
+  labels:
+    release: observability-prometheus
+    app: kube-prometheus-stack
+spec:
+  groups:
+    # High Latency Alerts
+    - name: otel-demo.latency
+      interval: 30s
+      rules:
+        - alert: HighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(otel_demo_request_duration_seconds_bucket{service_name=~"frontend|checkout|product-catalog|cart|payment"}[5m])) by (le, service_name)
+            ) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+            component: latency
+          annotations:
+            summary: "High latency detected in {{ $labels.service_name }}"
+            description: "Service {{ $labels.service_name }} has P95 latency of {{ $value | humanize }}s (threshold: 0.5s) for the last 5 minutes."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#high-latency"
+        
+        - alert: CriticalLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(otel_demo_request_duration_seconds_bucket{service_name=~"frontend|checkout|product-catalog|cart|payment"}[5m])) by (le, service_name)
+            ) > 2.0
+          for: 2m
+          labels:
+            severity: critical
+            component: latency
+          annotations:
+            summary: "Critical latency detected in {{ $labels.service_name }}"
+            description: "Service {{ $labels.service_name }} has P95 latency of {{ $value | humanize }}s (threshold: 2.0s) for the last 2 minutes."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#high-latency"
+
+    # High Error Rate Alerts
+    - name: otel-demo.error-rate
+      interval: 30s
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            (
+              sum(rate(otel_demo_http_requests_total{status_code=~"5..", service_name=~"frontend|checkout|product-catalog|cart|payment"}[5m])) by (service_name)
+              /
+              sum(rate(otel_demo_http_requests_total{service_name=~"frontend|checkout|product-catalog|cart|payment"}[5m])) by (service_name)
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+            component: errors
+          annotations:
+            summary: "High error rate detected in {{ $labels.service_name }}"
+            description: "Service {{ $labels.service_name }} has error rate of {{ $value | humanizePercentage }} (threshold: 5%) for the last 5 minutes."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#high-error-rate"
+        
+        - alert: CriticalErrorRate
+          expr: |
+            (
+              sum(rate(otel_demo_http_requests_total{status_code=~"5..", service_name=~"frontend|checkout|product-catalog|cart|payment"}[5m])) by (service_name)
+              /
+              sum(rate(otel_demo_http_requests_total{service_name=~"frontend|checkout|product-catalog|cart|payment"}[5m])) by (service_name)
+            ) > 0.10
+          for: 2m
+          labels:
+            severity: critical
+            component: errors
+          annotations:
+            summary: "Critical error rate detected in {{ $labels.service_name }}"
+            description: "Service {{ $labels.service_name }} has error rate of {{ $value | humanizePercentage }} (threshold: 10%) for the last 2 minutes."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#high-error-rate"
+
+    # Pod CrashLoopBackoff Alerts
+    - name: otel-demo.pod-health
+      interval: 30s
+      rules:
+        - alert: PodCrashLoop
+          expr: |
+            kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="otel-demo"} == 1
+          for: 2m
+          labels:
+            severity: critical
+            component: pod-health
+          annotations:
+            summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is in CrashLoopBackOff"
+            description: "Pod {{ $labels.pod }} (container: {{ $labels.container }}) in namespace {{ $labels.namespace }} has been in CrashLoopBackOff state for more than 2 minutes."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#pod-crashloop"
+        
+        - alert: PodNotReady
+          expr: |
+            kube_pod_status_ready{condition="false", namespace="otel-demo"} == 1
+          for: 5m
+          labels:
+            severity: warning
+            component: pod-health
+          annotations:
+            summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is not ready"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for more than 5 minutes."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#pod-not-ready"
+
+    # Resource Usage Alerts
+    - name: otel-demo.resources
+      interval: 30s
+      rules:
+        - alert: HighMemoryUsage
+          expr: |
+            (
+              sum(container_memory_working_set_bytes{namespace="otel-demo", container!="POD", container!=""}) by (pod, namespace)
+              /
+              sum(kube_pod_container_resource_limits{resource="memory", namespace="otel-demo"}) by (pod, namespace)
+            ) > 0.90
+          for: 5m
+          labels:
+            severity: warning
+            component: resources
+          annotations:
+            summary: "High memory usage in pod {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of its memory limit."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#high-memory-usage"
+        
+        - alert: HighCPUUsage
+          expr: |
+            (
+              sum(rate(container_cpu_usage_seconds_total{namespace="otel-demo", container!="POD", container!=""}[5m])) by (pod, namespace)
+              /
+              sum(kube_pod_container_resource_limits{resource="cpu", namespace="otel-demo"}) by (pod, namespace)
+            ) > 0.90
+          for: 5m
+          labels:
+            severity: warning
+            component: resources
+          annotations:
+            summary: "High CPU usage in pod {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of its CPU limit."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#high-cpu-usage"
+
+    # OpenTelemetry Collector Health
+    - name: otel-demo.collector
+      interval: 30s
+      rules:
+        - alert: OtelCollectorDown
+          expr: |
+            up{job="otel-collector"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            component: collector
+          annotations:
+            summary: "OpenTelemetry Collector is down"
+            description: "OpenTelemetry Collector job {{ $labels.job }} has been down for more than 1 minute."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#otel-collector-down"
+        
+        - alert: OtelCollectorHighErrorRate
+          expr: |
+            rate(otelcol_exporter_send_failed_spans_total[5m]) > 10
+          for: 5m
+          labels:
+            severity: warning
+            component: collector
+          annotations:
+            summary: "OpenTelemetry Collector has high error rate"
+            description: "OpenTelemetry Collector is failing to send {{ $value }} spans per second."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#otel-collector-errors"
+
+    # Service Availability
+    - name: otel-demo.availability
+      interval: 30s
+      rules:
+        - alert: ServiceDown
+          expr: |
+            up{job=~"otel-demo-services", namespace="otel-demo"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            component: availability
+          annotations:
+            summary: "Service {{ $labels.service_name }} is down"
+            description: "Service {{ $labels.service_name }} has been down for more than 2 minutes."
+            runbook_url: "https://github.com/your-org/opentelemetry-demo/blob/main/observability/runbook/alert-runbook.md#service-down"
+
+---
+# Alternative PromQL queries for services that expose standard metrics
+# If your services expose different metric names, adjust these queries accordingly
+
+# Example: Using HTTP request metrics from OpenTelemetry
+# High Latency (alternative):
+# histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le, service_name)) > 0.5
+
+# High Error Rate (alternative):
+# sum(rate(http_server_request_count{status_code=~"5.."}[5m])) by (service_name) / sum(rate(http_server_request_count[5m])) by (service_name) > 0.05
+
+# Example: Using OpenTelemetry metrics
+# High Latency (OpenTelemetry):
+# histogram_quantile(0.95, sum(rate(otel_http_server_request_duration_ms_bucket[5m])) by (le, service_name)) / 1000 > 0.5
+
+# High Error Rate (OpenTelemetry):
+# sum(rate(otel_http_server_request_count{status_code=~"5.."}[5m])) by (service_name) / sum(rate(otel_http_server_request_count[5m])) by (service_name) > 0.05
+

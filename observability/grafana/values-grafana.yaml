@@ -1,0 +1,194 @@
+# Grafana Helm Values for OpenTelemetry Demo
+# This configuration sets up Grafana with Prometheus and CloudWatch datasources,
+# and auto-imports dashboards for monitoring the OpenTelemetry Astronomy Shop demo.
+
+# Admin credentials (stored in Kubernetes secret)
+admin:
+  existingSecret: grafana-admin-credentials
+  userKey: admin-user
+  passwordKey: admin-password
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 80
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+
+# Ingress configuration (optional)
+ingress:
+  enabled: false
+  # If enabled, configure your ingress settings:
+  # annotations:
+  #   kubernetes.io/ingress.class: nginx
+  #   cert-manager.io/cluster-issuer: letsencrypt-prod
+  # hosts:
+  #   - grafana.example.com
+  # tls:
+  #   - secretName: grafana-tls
+  #     hosts:
+  #       - grafana.example.com
+
+# Persistence
+persistence:
+  enabled: true
+  type: pvc
+  storageClassName: gp3
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+# Resources
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+# Grafana configuration
+grafana.ini:
+  server:
+    root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
+  
+  # Security settings
+  security:
+    admin_user: admin
+    admin_password: admin  # Will be overridden by secret
+  
+  # Logging
+  log:
+    mode: console
+    level: info
+  
+  # Users
+  users:
+    allow_sign_up: false
+    auto_assign_org: true
+    auto_assign_org_role: Viewer
+  
+  # Datasources (will be configured via provisioning)
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://observability-prometheus-kube-prom-prometheus.observability.svc.cluster.local:9090
+          isDefault: true
+          editable: true
+          jsonData:
+            timeInterval: "15s"
+            httpMethod: POST
+        
+        - name: CloudWatch
+          type: cloudwatch
+          access: proxy
+          jsonData:
+            authType: default
+            defaultRegion: us-east-1
+            # If using IAM roles, configure:
+            # assumeRoleArn: arn:aws:iam::ACCOUNT_ID:role/grafana-cloudwatch-role
+          secureJsonData:
+            # If using access keys (not recommended):
+            # accessKey: ""
+            # secretKey: ""
+          editable: true
+
+# Dashboard providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'otel-demo'
+        orgId: 1
+        folder: 'OpenTelemetry Demo'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/otel-demo
+
+# Dashboards to import
+dashboards:
+  otel-demo:
+    latency:
+      gnetId: 0
+      revision: 0
+      datasource: Prometheus
+      file: dashboards/latency.json
+    error-rate:
+      gnetId: 0
+      revision: 0
+      datasource: Prometheus
+      file: dashboards/error-rate.json
+    resource-util:
+      gnetId: 0
+      revision: 0
+      datasource: Prometheus
+      file: dashboards/resource-util.json
+
+# Additional environment variables
+env:
+  GF_AUTH_ANONYMOUS_ENABLED: "false"
+  GF_AUTH_DISABLE_LOGIN_FORM: "false"
+  GF_INSTALL_PLUGINS: "grafana-cloudwatch-datasource"
+
+# Service account annotations for IRSA (if using AWS IAM roles)
+serviceAccount:
+  create: true
+  annotations: {}
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/grafana-cloudwatch-role
+
+# Additional volumes for dashboard files
+extraVolumes:
+  - name: dashboards
+    configMap:
+      name: grafana-dashboards
+
+extraVolumeMounts:
+  - name: dashboards
+    mountPath: /var/lib/grafana/dashboards/otel-demo
+    readOnly: true
+
+# Init containers (optional, for dashboard provisioning)
+initContainers:
+  - name: copy-dashboards
+    image: busybox
+    command:
+      - sh
+      - -c
+      - |
+        cp /dashboards/* /var/lib/grafana/dashboards/otel-demo/
+    volumeMounts:
+      - name: dashboards
+        mountPath: /var/lib/grafana/dashboards/otel-demo
+      - name: grafana-storage
+        mountPath: /var/lib/grafana
+
+# Pod annotations
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
+
+# Liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: 3000
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+
