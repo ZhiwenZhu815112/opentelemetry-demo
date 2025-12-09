@@ -1,51 +1,23 @@
 # Contributing to OpenTelemetry Demo Webstore
 
-Welcome to the OpenTelemetry Demo repository! We appreciate your interest in
-contributing. Whether you're fixing a bug, improving documentation, or adding a
-new feature, we value your contribution.
+Welcome to the ENPM818R Group Prject: Microservices on EKS (OpenTelemetry).
+This project builds on the capabilities provided in the open-source OpenTelemetry Demo repo available via [github](https://github.com/open-telemetry/opentelemetry-demo) which we have broken into seperate microservices for the purpose of this project.
 
-Before getting started, please review the
-[OpenTelemetry Contributor Guide](https://github.com/open-telemetry/community/blob/main/guides/contributor/README.md)
-for details on code attribution and best practices.
 
-## Getting Started
+Meetings are held on Monday over Google Meets weekly at 9:00pm ET. The schedule may change based on teamates' avaiability.
 
-### Join a SIG Call
 
-We meet every other Wednesday at 8:00 PT. The schedule may change based on
-contributors' availability. Check the [OpenTelemetry Community Calendar](https://github.com/open-telemetry/community?tab=readme-ov-file#special-interest-groups)
-for specific dates and Zoom links.
+## Ways to contribute
+- Document actions
+- Submit code changes via pull requests
+- Generate branches to address specific tasks/sections
 
-See the
-[public meeting notes](https://docs.google.com/document/d/16f-JOjKzLgWxULRxY8TmpM_FjlI1sthvKurnqFz9x98/edit)
-for a summary description of past meetings.
-For edit access, ask in our
-[Slack channel](https://cloud-native.slack.com/archives/C03B4CWV4DA).
+### Collaboorate with team 
 
-### Sign the Contributor License Agreement (CLA)
-
-Before contributing, sign the [CLA](https://identity.linuxfoundation.org/projects/cncf)
-
-### Find a Mentor (Buddy System)
-
-New to OpenTelemetry? We encourage you to find a mentor who can guide you
-through your first contribution.
-
-1. Create your [CNCF Slack account](https://slack.cncf.io/) and join the
-   [otel-community-demo](https://app.slack.com/client/T08PSQ7BQ/C03B4CWV4DA)
-   channel.
-2. Post in the room with an introduction to yourself, what area you are
-   interested in (check issues marked with [help
-   wanted](https://github.com/open-telemetry/opentelemetry-demo/labels/help%20wanted)),
-   and say you are looking for a buddy. We will match you with someone who has
-   experience in that area.
-
-Your OpenTelemetry buddy is your resource to talk to directly on all aspects of
-contributing to OpenTelemetry: providing context, reviewing PRs, and helping
-those get merged. Buddies will not be available 24/7, but is committed to
-responding during their normal contribution hours.
+In order to efficiently collaborate on this project, effective communication will be essential to the overall success of this project. Additionally, UMD emails will be used as the primary contact for each member.
 
 ## Setting Up Your Development Environment
+
 
 ### Prerequisites
 
@@ -56,18 +28,19 @@ Ensure you have the following installed:
 - [Docker](https://www.docker.com/get-started/)
 - [Docker Compose](https://docs.docker.com/compose/install/#install-compose) v2.0.0+
 
-### Clone the Repository
+
+##Getting Started
+
+### Clone the forked Repository
 
 ```sh
-git clone https://github.com/open-telemetry/opentelemetry-demo.git
+git clone https://github.com/ZhiwenZhu815112/opentelemetry-demo.git
 cd opentelemetry-demo/
 ```
 
 ### Run the Demo
 
-```sh
-make start
-```
+Follow instructions provided in README.md file.
 
 ### Verify the Webstore & Telemetry
 
@@ -137,46 +110,28 @@ docker logs <container_id>
 docker-compose restart
 ```
 
-### Review the Documentation
+## Issues
 
-The Demo team is committed to keeping the demo up to date. That means the
-documentation as well as the code. When making changes to any service or feature
-remember to find the related docs and update those as well. Most (but not all)
-documentation can be found on the OTel website under [Demo docs][docs].
+- Search existing issues before opening a new one.
+- When creating an issue, clearly describe what:
+  - The problem or request 
+  - Steps to reproduce (for bugs)
+  - Expected vs actual behavior
+  - Relevant logs, screenshots, or configuration snippets
 
-### Running the React Native example
-
-If you are interested in running the React Native example app in this repo
-please review [these instructions](src/react-native-app/README.md).
-
-## Create Your First Pull Request
 
 ### How to Send Pull Requests
 
-Everyone is welcome to contribute code to `opentelemetry-demo` via
-GitHub pull requests (PRs).
+Open a pull request against the `docker-Microservices`  branch.
+- In the PR description, include:
+  - Summary of the change
+  - Related issue numbers (for example, “Closes #123”)
+  - Testing performed
+  - Any additional details
+- Ensure:
+  - All checks pass
+  - Code follows the project’s style and conventions
 
-To create a new PR, fork the project in GitHub and clone the upstream repo:
-
-> [!NOTE]
-> Please fork to a personal GitHub account rather than a corporate/enterprise
-> one so maintainers can push commits to your branch.
-> **Pull requests from protected forks will not be accepted.**
-
-```sh
-git clone https://github.com/open-telemetry/opentelemetry-demo.git
-```
-
-Navigate to the repo root:
-
-```sh
-cd opentelemetry-demo
-```
-
-Add your fork as an origin:
-
-```sh
-git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-demo.git
 ```
 
 Check out a new branch, make modifications and push the branch to your fork:
@@ -192,121 +147,13 @@ $ git commit -m "short description of the change"
 $ git push fork feature
 ```
 
-Open a pull request against the main `opentelemetry-demo` repo.
+Open a pull request against the forked `opentelemetry-demo` repo.
 
 ### How to Receive Comments
 
-- If the PR is not ready for review, please mark it as
-  [`draft`](https://github.blog/2019-02-14-introducing-draft-pull-requests/).
-- Make sure CLA is signed and all required CI checks are clear.
-- Submit small, focused PRs addressing a single
-  concern/issue.
-- Make sure the PR title reflects the contribution.
-- Write a summary that helps understand the change.
-- Include usage examples in the summary, where applicable.
-- Include benchmarks (before/after) in the summary, for contributions that are
-  performance enhancements.
+Feedback will be provided over Google teams chat.
 
-### How to Get PRs Merged
+### How we will Get PRs Merged
 
-A PR is considered to be **ready to merge** when:
+Approver will review pull requests and if all tests and checks pass, will approve merge request.
 
-- It has received approval from
-  [Approvers](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver)
-  /
-  [Maintainers](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
-- Major feedbacks are resolved.
-- It has been open for review for at least one working day. This gives people
-  reasonable time to review.
-- The [documentation][docs] and [Changelog](./CHANGELOG.md) have been updated
-  to reflect the new changes.
-- Trivial changes (typo, cosmetic, doc, etc.) don't have to wait for one day.
-
-Any Maintainer can merge the PR once it is **ready to merge**. Note, that some
-PRs may not be merged immediately if the repo is in the process of a release and
-the maintainers decided to defer the PR to the next release train.
-
-If a PR has been stuck (e.g. there are lots of debates and people couldn't agree
-on each other), the owner should try to get people aligned by:
-
-- Consolidating the perspectives and putting a summary in the PR. It is
-  recommended to add a link into the PR description, which points to a comment
-  with a summary in the PR conversation.
-- Tagging subdomain experts (by looking at the change history) in the PR asking
-  for suggestion.
-- Reaching out to more people on the [CNCF OpenTelemetry Community Demo Slack
-  channel](https://app.slack.com/client/T08PSQ7BQ/C03B4CWV4DA).
-- Stepping back to see if it makes sense to narrow down the scope of the PR or
-  split it up.
-- If none of the above worked and the PR has been stuck for more than 2 weeks,
-  the owner should bring it to the OpenTelemetry Community Demo SIG
-  [meeting](README.md#contributing).
-
-## Multi-platform Builds
-
-Creating multi-platform builds requires docker buildx to be installed. This
-is part of Docker Desktop for macOS, or can be installed using
-`apt install docker-buildx` on Ubuntu.
-
-To build and load the multi-platform images locally you will need to configure
-docker to use `containerd`. This can be done in Docker Desktop settings on MacOS
-or Windows. Please follow
-[these instructions](https://docs.docker.com/engine/storage/containerd/#enable-containerd-image-store-on-docker-engine)
-to configure Docker Engine on Linux/Ubuntu.
-
-You will need a multi-platform capable builder with a limiter set on parallelism
-to avoid errors while building the images. It is recommended to limit the
-parallelism to 4. This can be done by specifying a configuration file when
-creating the builder. The `buildkitd.toml` file in this repository can be used
-as the builder configuration file.
-
-To create a multi-platform builder with a parallelism limit of 4, use the
-following command:
-
-```shell
-make create-multiplatform-builder
-```
-
-A builder will be created and set as the active builder. You can check the
-builder status with `docker buildx inspect`. To build multi-platform images for
-linux/amd64 and linux/arm64, use the following command:
-
-```shell
-make build-multiplatform
-```
-
-To build and push multi-platform images to a registry, ensure to set
-`IMAGE_NAME` to the name of the registry and image repository to use in the
-`.env.override` file and run:
-
-```shell
-make build-multiplatform-and-push
-```
-
-## Making a new release
-
-Maintainers can create a new release when desired by following these steps.
-
-1. Create a Pull Request that updates the `IMAGE_VERSION` environment variable
-   in `.env` to the _new_ version number based on the format `x.x.x` and merge
-   it.
-2. [Create a new
-   release](https://github.com/open-telemetry/opentelemetry-demo/releases/new),
-   creating a new tag for the _new_ version number based on main. Automatically
-   generate release notes. Prepend a summary of the major changes to the release
-   notes.
-3. After images for the new release are built and published, create a new Pull
-   Request that updates the `CHANGELOG.md` with the new version leaving the
-   `Unreleased` section for the next release. Merge the Pull Request.
-4. Create a new Pull Request to update the deployment of the demo in the
-   [OpenTelemetry Helm
-   Charts](https://github.com/open-telemetry/opentelemetry-helm-charts) repo.
-   Merge the Pull Request.
-5. After the Helm chart is released, create a new Pull Request which updates the
-   Demo's Kubernetes manifest by running `make generate-kubernetes-manifests`.
-   Merge the Pull Request.
-
-[docs]: https://opentelemetry.io/docs/demo/
-
-By following this guide, you'll have a smoother onboarding experience as a
-contributor. Happy coding!
