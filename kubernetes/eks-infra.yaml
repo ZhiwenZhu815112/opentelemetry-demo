@@ -11,6 +11,32 @@ Parameters:
   VpcCidr:
     Type: String
     Default: 10.0.0.0/16
+  DBName:
+    Type: String
+    Default: otel
+    Description: PostgreSQL database name
+  DBUsername:
+    Type: String
+    Default: otelu
+    Description: PostgreSQL application username
+  DBPassword:
+    NoEcho: true
+    Type: String
+    MinLength: 8
+    Description: PostgreSQL master password (will be moved to Secrets Manager later)
+  DBEngineVersion:
+    Type: String
+    Default: "15.14"
+    Description: PostgreSQL engine version
+    AllowedValues:
+      - "15.14"
+      - "15.13"
+      - "15.12"
+      - "15.11"
+      - "15.10"
+      - "15.9"
+      - "15.8"
+      - "15.7"
 
 Resources:
   VPC:
@@ -138,11 +164,51 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties: {SubnetId: !Ref PrivateSubnetB, RouteTableId: !Ref PrivateRouteTable}
 
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for PostgreSQL RDS
+      SubnetIds:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-db-subnet-group"
+
   ClusterSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: EKS control plane security group
       VpcId: !Ref VPC
+
+  NodeSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EKS worker nodes
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-node-sg"
+
+  PostgresSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for PostgreSQL RDS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ClusterSecurityGroup
+          Description: Allow PostgreSQL access from EKS cluster
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: !Ref VpcCidr
+          Description: Allow PostgreSQL access from VPC (for EKS nodes)
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-postgres-sg"
 
   EKSClusterRole:
     Type: AWS::IAM::Role
@@ -208,3 +274,53 @@ Resources:
         MinSize: 2
         MaxSize: 5
       InstanceTypes: ["t3.medium"]
+
+  PostgresDB:
+    Type: AWS::RDS::DBInstance
+    DependsOn: [DBSubnetGroup, PostgresSecurityGroup]
+    Properties:
+      Engine: postgres
+      EngineVersion: !Ref DBEngineVersion
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: 20
+      StorageType: gp3
+      StorageEncrypted: true
+      
+      DBName: !Ref DBName
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref PostgresSecurityGroup
+      
+      MultiAZ: false
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 7
+      DeletionProtection: false
+      AutoMinorVersionUpgrade: true
+      
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-postgres-db"
+        - Key: Environment
+          Value: demo
+
+Outputs:
+  PostgresEndpoint:
+    Description: RDS PostgreSQL endpoint hostname
+    Value: !GetAtt PostgresDB.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}-PostgresEndpoint"
+
+  PostgresPort:
+    Description: RDS PostgreSQL port
+    Value: !GetAtt PostgresDB.Endpoint.Port
+    Export:
+      Name: !Sub "${AWS::StackName}-PostgresPort"
+
+  PostgresSecurityGroupId:
+    Description: RDS PostgreSQL security group ID
+    Value: !Ref PostgresSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-PostgresSecurityGroupId"

@@ -336,6 +336,8 @@ data:
               - https://*
             endpoint: ${env:MY_POD_IP}:4318
       postgresql:
+        # NOTE: Replace <RDS_ENDPOINT> with actual RDS endpoint after CloudFormation deployment
+        # The ExternalName service 'postgresql' will resolve to RDS endpoint
         endpoint: postgresql:5432
         metrics:
           postgresql.blks_hit:
@@ -354,6 +356,8 @@ data:
             enabled: true
           postgresql.tup_updated:
             enabled: true
+        # NOTE: Update password after RDS is created and user is configured
+        # For now using default, but should match RDS master password or application user password
         password: otel
         tls:
           insecure: true
@@ -17800,6 +17804,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgresql
+  namespace: otel-demo
   labels:
     
     opentelemetry.io/name: postgresql
@@ -17809,14 +17814,14 @@ metadata:
     app.kubernetes.io/version: "2.1.3"
     app.kubernetes.io/part-of: opentelemetry-demo
 spec:
-  type: ClusterIP
+  type: ExternalName
+  # NOTE: Replace <RDS_ENDPOINT> with actual RDS endpoint after CloudFormation deployment
+  # Get endpoint with: aws cloudformation describe-stacks --stack-name <STACK_NAME> --query "Stacks[0].Outputs[?OutputKey=='PostgresEndpoint'].OutputValue" --output text
+  externalName: otel-demo-cluster-stack-postgresdb-v8s1tevl3dsm.cin62keou9i5.us-east-1.rds.amazonaws.com
   ports:
-    - port: 5432
-      name: tcp-service
+    - name: postgres
+      port: 5432
       targetPort: 5432
-  selector:
-    
-    opentelemetry.io/name: postgresql
 ---
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: v1
@@ -17840,6 +17845,29 @@ spec:
   selector:
     
     opentelemetry.io/name: product-catalog
+---
+# Source: opentelemetry-demo/templates/component.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-reviews
+  labels:
+    
+    opentelemetry.io/name: product-reviews
+    
+    app.kubernetes.io/component: product-reviews
+    app.kubernetes.io/name: product-reviews
+    app.kubernetes.io/version: "2.1.3"
+    app.kubernetes.io/part-of: opentelemetry-demo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      name: tcp-service
+      targetPort: 8080
+  selector:
+    
+    opentelemetry.io/name: product-reviews
 ---
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: v1
@@ -19186,6 +19214,8 @@ spec:
               value: currency:8080
             - name: PRODUCT_CATALOG_ADDR
               value: product-catalog:8080
+            - name: PRODUCT_REVIEWS_ADDR
+              value: product-reviews:8080
             - name: RECOMMENDATION_ADDR
               value: recommendation:8080
             - name: SHIPPING_ADDR
@@ -19604,68 +19634,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgresql
-  labels:
-    
-    opentelemetry.io/name: postgresql
-    
-    app.kubernetes.io/component: postgresql
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: "2.1.3"
-    app.kubernetes.io/part-of: opentelemetry-demo
-spec:
-  replicas: 1
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      
-      opentelemetry.io/name: postgresql
-  template:
-    metadata:
-      labels:
-        
-        opentelemetry.io/name: postgresql
-        
-        app.kubernetes.io/component: postgresql
-        app.kubernetes.io/name: postgresql
-    spec:
-      serviceAccountName: opentelemetry-demo
-      containers:
-        - name: postgresql
-          image: 'ghcr.io/open-telemetry/demo:2.1.3-postgresql'
-          imagePullPolicy: IfNotPresent
-          ports:
-            
-            - containerPort: 5432
-              name: service
-          env:
-            - name: OTEL_SERVICE_NAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: metadata.labels['app.kubernetes.io/component']
-            - name: OTEL_COLLECTOR_NAME
-              value: otel-collector
-            - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
-              value: cumulative
-            - name: POSTGRES_USER
-              value: root
-            - name: POSTGRES_PASSWORD
-              value: otel
-            - name: POSTGRES_DB
-              value: otel
-            - name: OTEL_RESOURCE_ATTRIBUTES
-              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=2.1.3
-          resources:
-            limits:
-              memory: 100Mi
-          volumeMounts:
-      volumes:
----
-# Source: opentelemetry-demo/templates/component.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: product-catalog
   labels:
     
@@ -19712,16 +19680,14 @@ spec:
               value: cumulative
             - name: PRODUCT_CATALOG_PORT
               value: "8080"
-            - name: PRODUCT_CATALOG_RELOAD_INTERVAL
-              value: "10"
             - name: FLAGD_HOST
               value: flagd
             - name: FLAGD_PORT
               value: "8013"
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://$(OTEL_COLLECTOR_NAME):4317
             - name: GOMEMLIMIT
               value: 16MiB
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://$(OTEL_COLLECTOR_NAME):4317
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=2.1.3
           resources:
@@ -19735,6 +19701,147 @@ spec:
           configMap:
             name: product-catalog-products
 ---
+# Source: opentelemetry-demo/templates/component.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-reviews
+  labels:
+    
+    opentelemetry.io/name: product-reviews
+    
+    app.kubernetes.io/component: product-reviews
+    app.kubernetes.io/name: product-reviews
+    app.kubernetes.io/version: "2.1.3"
+    app.kubernetes.io/part-of: opentelemetry-demo
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      
+      opentelemetry.io/name: product-reviews
+  template:
+    metadata:
+      labels:
+        
+        opentelemetry.io/name: product-reviews
+        
+        app.kubernetes.io/component: product-reviews
+        app.kubernetes.io/name: product-reviews
+    spec:
+      serviceAccountName: opentelemetry-demo
+      containers:
+        - name: product-reviews
+          image: 'ghcr.io/open-telemetry/demo:2.1.3-product-reviews'
+          imagePullPolicy: IfNotPresent
+          ports:
+            
+            - containerPort: 8080
+              name: service
+          env:
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: otel-collector
+            - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+              value: cumulative
+            - name: PRODUCT_REVIEWS_PORT
+              value: "8080"
+            - name: OTEL_PYTHON_LOG_CORRELATION
+              value: "true"
+            - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+              value: python
+            - name: DB_CONNECTION_STRING
+              value: Host=postgresql;Username=otelu;Password=otelp;Database=otel
+            - name: PRODUCT_CATALOG_ADDR
+              value: product-catalog:8080
+            - name: FLAGD_HOST
+              value: flagd
+            - name: FLAGD_PORT
+              value: "8013"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://$(OTEL_COLLECTOR_NAME):4318
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=2.1.3
+          resources:
+            limits:
+              memory: 100Mi
+          volumeMounts:
+      volumes:
+---
+# Source: opentelemetry-demo/templates/component.yaml
+# --- COMMENTED OUT: PostgreSQL migrated to Amazon RDS ---
+# This deployment has been replaced with Amazon RDS PostgreSQL.
+# The database is now managed through CloudFormation (eks-infra.yaml).
+# To rollback, uncomment this section and change the Service back to ClusterIP.
+#
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: postgresql
+#   labels:
+#     
+#     opentelemetry.io/name: postgresql
+#     
+#     app.kubernetes.io/component: postgresql
+#     app.kubernetes.io/name: postgresql
+#     app.kubernetes.io/version: "2.1.3"
+#     app.kubernetes.io/part-of: opentelemetry-demo
+# spec:
+#   replicas: 1
+#   revisionHistoryLimit: 10
+#   selector:
+#     matchLabels:
+#       
+#       opentelemetry.io/name: postgresql
+#   template:
+#     metadata:
+#       labels:
+#         
+#         opentelemetry.io/name: postgresql
+#         
+#         app.kubernetes.io/component: postgresql
+#         app.kubernetes.io/name: postgresql
+#     spec:
+#       serviceAccountName: opentelemetry-demo
+#       containers:
+#         - name: postgresql
+#           image: 'ghcr.io/open-telemetry/demo:2.1.3-postgresql'
+#           imagePullPolicy: IfNotPresent
+#           ports:
+#             
+#               - containerPort: 5432
+#                 name: service
+#           env:
+#             - name: OTEL_SERVICE_NAME
+#               valueFrom:
+#                 fieldRef:
+#                   apiVersion: v1
+#                   fieldPath: metadata.labels['app.kubernetes.io/component']
+#             - name: OTEL_COLLECTOR_NAME
+#               value: otel-collector
+#             - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+#               value: cumulative
+#             - name: POSTGRES_USER
+#               value: root
+#             - name: POSTGRES_PASSWORD
+#               value: otel
+#             - name: POSTGRES_DB
+#               value: otel
+#             - name: OTEL_RESOURCE_ATTRIBUTES
+#               value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=2.1.3
+#           resources:
+#             limits:
+#               memory: 100Mi
+#           volumeMounts:
+#       volumes:
+---
+# Source: opentelemetry-demo/templates/component.yaml
+
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: apps/v1
 kind: Deployment
