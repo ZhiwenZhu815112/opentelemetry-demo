@@ -1,0 +1,25 @@
+name: Kube-score Analysis
+
+on:
+  push:
+    branches: [create-github-actions]
+  workflow_dispatch:
+
+jobs:
+  kube_score:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install kube-score
+        run: |
+          wget https://github.com/zegl/kube-score/releases/download/v1.16.1/kube-score_1.16.1_linux_amd64.tar.gz
+          tar xvf ./kube-score_1.16.1_linux_amd64.tar.gz && mv kube-score /usr/local/bin
+      - name: Run kube-score
+        run: kube-score score kubernetes/opentelemetry-demo.yaml > score-results.txt || true
+      - name: upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: upload results
+          path: score-results.txt
