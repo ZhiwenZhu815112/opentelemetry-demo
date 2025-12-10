@@ -34,7 +34,7 @@ ingress:
 persistence:
   enabled: true
   type: pvc
-  storageClassName: gp3
+  storageClassName: gp2
   accessModes:
     - ReadWriteOnce
   size: 10Gi
@@ -141,7 +141,7 @@ env:
 serviceAccount:
   create: true
   annotations: {}
-    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/grafana-cloudwatch-role
+  # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/grafana-cloudwatch-role
 
 # Additional volumes for dashboard files
 extraVolumes:
@@ -191,4 +191,6 @@ readinessProbe:
   initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
+
+
 
