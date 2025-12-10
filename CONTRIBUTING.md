@@ -1,7 +1,7 @@
 # Contributing to OpenTelemetry Demo Webstore
 
 Welcome to the ENPM818R Group Prject: Microservices on EKS (OpenTelemetry).
-This project builds on the capabilities provided in the open-source OpenTelemetry Demo repo available via [github](https://github.com/open-telemetry/opentelemetry-demo) which we have broken into seperate microservices for the purpose of this project.
+This project builds on the capabilities provided in the open-source OpenTelemetry Demo repo available via [github](https://github.com/open-telemetry/opentelemetry-demo) which we have broken into separate microservices for the purpose of this project.
 
 
 Meetings are held on Monday over Google Meets weekly at 9:00pm ET. The schedule may change based on teamates' avaiability.
