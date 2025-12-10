@@ -1,0 +1,74 @@
+# StorageClasses for EBS CSI Driver
+#
+# Prerequisites:
+# - EBS CSI Driver must be installed at cluster level via Helm/IRSA
+# - IAM role for EBS CSI driver controller must be configured
+#
+# Usage:
+#   kubectl apply -f storageclasses.yaml
+#
+# Verify:
+#   kubectl get storageclass
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-ssd
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    app.kubernetes.io/name: storageclass
+    app.kubernetes.io/component: storage
+# EBS CSI driver provisioner
+provisioner: ebs.csi.aws.com
+# General purpose SSD (gp3) - cost-effective, good performance
+parameters:
+  type: gp3
+  # gp3 allows IOPS and throughput configuration, but using defaults here
+  # Can be customized per PVC if needed
+# Delete policy: volumes are deleted when PVC is deleted (for dev/test)
+reclaimPolicy: Delete
+# Wait for pod to be scheduled before provisioning volume (zone-aware)
+volumeBindingMode: WaitForFirstConsumer
+# Allow volume expansion
+allowVolumeExpansion: true
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-ssd-retain
+  labels:
+    app.kubernetes.io/name: storageclass
+    app.kubernetes.io/component: storage
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+# Retain policy: volumes are kept when PVC is deleted (for production data)
+# Use this for critical data that should persist even if PVC is accidentally deleted
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: io1-ssd-retain
+  labels:
+    app.kubernetes.io/name: storageclass
+    app.kubernetes.io/component: storage
+provisioner: ebs.csi.aws.com
+parameters:
+  type: io1
+  # High IOPS for workloads requiring high I/O performance (e.g., OpenSearch)
+  # IOPS can be customized per PVC; 3000 is a reasonable starting point
+  # Note: io1 volumes require explicit IOPS specification
+  iops: "3000"
+# Retain policy for production workloads
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+# Note: io1 volumes can be expensive. Use only for workloads that need high IOPS.
