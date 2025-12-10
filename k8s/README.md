@@ -178,3 +178,74 @@ k8s/
 │   ├── config-bucket-policy.json
 │   └── trust-policy.json
 └── lbc-extra-permissions.json
+
+Cloud Resource Cleanup Summary
+
+Environment teardown following completion of the OpenTelemetry Demo security hardening project.
+
+EKS Cluster and Compute Layer
+
+The Amazon EKS cluster otel-demo and its associated managed nodegroups were deleted using eksctl delete cluster.
+
+Check: 
+
+aws eks list-clusters returns no active clusters.
+
+aws eks list-fargate-profiles returns ResourceNotFoundException, indicating the cluster no longer exists.
+
+All IAM roles created by the cluster and its addons were removed.
+
+Steps included:
+	•	Detaching all AWS managed policies
+	•	Removing roles from instance profiles
+	•	Deleting both roles and profiles
+
+check: 
+aws iam list-roles --query 'Roles[?contains(RoleName, `eksctl-otel-demo`)].RoleName'
+
+Returns no result
+
+S3 Buckets & Config Recorder
+	•	The AWS Config S3 bucket (aws-config-<ACCOUNT_ID>-use1) was:
+	•	Emptied using aws s3 rm
+	•	Permanently deleted with aws s3 rb
+	•	AWS Config recorder and delivery channels tied to this bucket are no longer active.
+
+Secrets Manager
+
+The PostgreSQL application password used in the lab was removed:
+aws secretsmanager delete-secret \
+  --secret-id otel-demo/postgresql-password \
+  --force-delete-without-recovery
+
+aws secretsmanager delete-secret \
+  --secret-id otel-demo/postgresql-password \
+  --force-delete-without-recovery
+
+aws elbv2 describe-load-balancers
+Returns no ALBs associated with the project.
+
+No Remaining Compute or Storage Costs
+
+Verified:
+	•	No EC2 instances
+	•	No EBS volumes
+	•	No EKS clusters
+	•	No Elastic Network Interfaces
+	•	No managed nodegroups
+
+Commands used:
+aws ec2 describe-instances
+aws ec2 describe-volumes
+aws ec2 describe-network-interfaces
+
+All AWS services used for this project have been fully decommissioned, ensuring:
+	•	No ongoing billing
+	•	No unused IAM identities or long-lived credentials
+	•	Clean separation between lab infrastructure and production environments
+	•	Compliance with Cloud Governance & Cost Management best practices
+
+
+
+
+
