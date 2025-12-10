@@ -42,7 +42,7 @@ prometheus:
       volumeClaimTemplate:
         spec:
           accessModes: ["ReadWriteOnce"]
-          storageClassName: gp3
+          storageClassName: gp2
           resources:
             requests:
               storage: 50Gi
@@ -57,7 +57,7 @@ prometheus:
       matchLabels:
         release: observability-prometheus
     
-    # Additional scrape configs for OpenTelemetry Collector
+    # Combined additional scrape configs
     additionalScrapeConfigs:
       - job_name: 'otel-collector'
         kubernetes_sd_configs:
@@ -79,22 +79,7 @@ prometheus:
           - source_labels: [__meta_kubernetes_namespace]
             action: replace
             target_label: namespace
-    
-    # External labels
-    externalLabels:
-      cluster: otel-demo-cluster
-      environment: production
-    
-    # Alerting configuration
-    alerting:
-      alertmanagers:
-        - namespace: observability
-          name: observability-prometheus-alertmanager
-          port: 9093
-          pathPrefix: /
-    
-    # Additional scrape configs for OpenTelemetry Demo services
-    additionalScrapeConfigs:
+
       - job_name: 'otel-demo-services'
         kubernetes_sd_configs:
           - role: pod
@@ -122,6 +107,19 @@ prometheus:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: kubernetes_pod_name
+    
+    # External labels
+    externalLabels:
+      cluster: otel-demo-cluster
+      environment: production
+    
+    # Alerting configuration
+    alerting:
+      alertmanagers:
+        - namespace: observability
+          name: observability-prometheus-k-alertmanager
+          port: http-web
+          pathPrefix: /
 
 # Alertmanager configuration
 alertmanager:
@@ -140,7 +138,7 @@ alertmanager:
       volumeClaimTemplate:
         spec:
           accessModes: ["ReadWriteOnce"]
-          storageClassName: gp3
+          storageClassName: gp2
           resources:
             requests:
               storage: 10Gi
@@ -211,17 +209,20 @@ kubeStateMetrics:
 # node-exporter configuration
 nodeExporter:
   enabled: true
+  # ---- PATCH: Allow node-exporter to schedule on all nodes ----
+  tolerations:
+    - operator: Exists
   resources:
     requests:
-      cpu: 50m
-      memory: 64Mi
+      cpu: 5m
+      memory: 20Mi
     limits:
       cpu: 100m
       memory: 128Mi
 
 # Grafana (optional, we'll install separately)
 grafana:
-  enabled: false
+  enabled: true
 
 # Prometheus Adapter for Kubernetes Metrics API (optional)
 kubeApiServer:
@@ -261,18 +262,16 @@ defaultRules:
     kubeStateMetrics: true
     network: true
     node: true
-    nodeExporterAlerting: true
-    nodeExporterRecording: true
-    prometheus: true
-    prometheusOperator: true
-    time: true
+    # removed invalid mis-indented keys
 
 # Service account annotations for IRSA (if using AWS IAM roles)
 serviceAccounts:
   prometheus:
     annotations: {}
-      # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/prometheus-role
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/prometheus-role
   alertmanager:
     annotations: {}
-      # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/alertmanager-role
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/alertmanager-role
+
+
 

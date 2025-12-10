@@ -240,4 +240,3 @@ service:
 - **High costs**: Review retention policies and log volume
 - **Missing trace IDs**: Ensure OpenTelemetry SDK is properly configured
 - **Log format issues**: Verify JSON structure matches expected format
-

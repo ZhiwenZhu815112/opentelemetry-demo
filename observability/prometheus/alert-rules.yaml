@@ -206,3 +206,5 @@ spec:
 # High Error Rate (OpenTelemetry):
 # sum(rate(otel_http_server_request_count{status_code=~"5.."}[5m])) by (service_name) / sum(rate(otel_http_server_request_count[5m])) by (service_name) > 0.05
 
+
+

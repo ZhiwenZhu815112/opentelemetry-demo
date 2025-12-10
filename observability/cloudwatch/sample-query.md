@@ -224,4 +224,3 @@ metrics:
     aws_metric_name: ErrorCount
     aws_dimensions: [ServiceName]
 ```
-
