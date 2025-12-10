@@ -18562,6 +18562,9 @@ spec:
         - name: accounting
           image: 'ghcr.io/open-telemetry/demo:2.1.3-accounting'
           imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -18630,9 +18633,20 @@ spec:
           image: 'ghcr.io/open-telemetry/demo:2.1.3-ad'
           imagePullPolicy: IfNotPresent
           ports:
-            
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -18696,9 +18710,20 @@ spec:
           image: 'ghcr.io/open-telemetry/demo:2.1.3-cart'
           imagePullPolicy: IfNotPresent
           ports:
-            
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -18775,6 +18800,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -18862,6 +18899,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -18924,6 +18973,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19032,6 +19093,18 @@ spec:
             
             - containerPort: 4000
               name: service
+
+          livenessProbe:
+            tcpSocket:
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19188,6 +19261,29 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19239,6 +19335,10 @@ spec:
           resources:
             limits:
               memory: 250Mi
+              cpu: 500m      
+            requests:        
+              cpu: 100m      
+              memory: 64Mi
           securityContext:
             runAsGroup: 1001
             runAsNonRoot: true
@@ -19284,6 +19384,7 @@ spec:
             
             - containerPort: 8080
               name: service
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19382,6 +19483,18 @@ spec:
             
             - containerPort: 8081
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19518,6 +19631,29 @@ spec:
             
             - containerPort: 8089
               name: service
+          
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8089
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8089
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19600,6 +19736,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19668,6 +19816,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19880,6 +20040,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -19948,6 +20120,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -20018,6 +20202,18 @@ spec:
             
             - containerPort: 8080
               name: service
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
@@ -20080,6 +20276,7 @@ spec:
             
             - containerPort: 6379
               name: valkey-cart
+          
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
